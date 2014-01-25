@@ -21,9 +21,16 @@ namespace GitmoSharp {
             repository = new Repository(path);
         }
 
-        public void Zip(string relativePath, string zipPath)
+        public void Zip(string id, string relativePathToZip, string outPath)
         {
+            string pathToZip = IO.Path.Combine(rootPath, relativePathToZip);
 
+            DateTimeOffset lastUpdated = DateTimeOffset.MinValue; // TODO: this should come from git history
+
+            Zipper z = new Zipper(id, outPath);
+            if (z.DoesArchiveRequireRebuilding(lastUpdated)) {
+                z.WriteArchive(pathToZip);
+            }
         }
 
         public static bool IsValid(string path)

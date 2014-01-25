@@ -36,15 +36,19 @@ namespace GitmoSharp.Test
         [TestMethod]
         public void TestZipDirectory()
         {
-            string path = paths[1];
-            IO.File.WriteAllText(IO.Path.Combine(path, "somefile.txt"), "somecontent");
-            string zipPath = "Test/out.zip";
+            string repositoryPath = paths[1];
 
-            Gitmo g = new Gitmo(path);
+            IO.File.WriteAllText(IO.Path.Combine(repositoryPath, "somefile.txt"), "somecontent");
 
-            g.Zip(path, zipPath);
+            Gitmo g = new Gitmo(repositoryPath);
 
-            Assert.IsTrue(IO.File.Exists(zipPath));
+            string archiveID = "theid";
+            string relativePathInRepository = ""; // whole thing
+            string outPath = "Test";
+
+            g.Zip(archiveID, relativePathInRepository, outPath);
+
+            Assert.IsTrue(IO.File.Exists("Test/theid.zip"));
         }
 
         [TestMethod]
