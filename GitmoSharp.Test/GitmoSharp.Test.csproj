@@ -4,7 +4,7 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{7E56BF93-5222-4823-9650-0DE87147307B}</ProjectGuid>
-    <ProjectGuid>001de0c2-cb5c-4651-bcbf-574a0fa60e9c</ProjectGuid>
+    <ProjectGuid>{7E56BF93-5222-4823-9650-0DE87147307B}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>GitmoSharp.Test</RootNamespace>
