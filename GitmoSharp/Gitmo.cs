@@ -21,6 +21,11 @@ namespace GitmoSharp {
             repository = new Repository(path);
         }
 
+        public void Zip(string relativePath, string zipPath)
+        {
+
+        }
+
         public static bool IsValid(string path)
         {
             return Repository.IsValid(path);
