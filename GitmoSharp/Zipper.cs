@@ -6,7 +6,7 @@ using System.Runtime.Serialization.Json;
 using System.Text;
 
 namespace GitmoSharp {
-    /// <summary> Handles creating zip archives of content pieces</summary>
+    /// <summary> Handles creating zip archives of git repositories.</summary>
     internal class Zipper {
         private string outpath;
         private string id;
