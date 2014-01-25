@@ -26,6 +26,11 @@ namespace GitmoSharp {
             return Repository.IsValid(path);
         }
 
+        public static void Init(string path)
+        {
+            Repository.Init(path);
+        }
+
         private void ValidatePath()
         {
             if (string.IsNullOrWhiteSpace(rootPath)) {
