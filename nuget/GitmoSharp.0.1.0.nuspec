@@ -17,5 +17,7 @@
             <frameworkAssembly assemblyName="System.Runtime.Serialization" targetFramework="" />
         </frameworkAssemblies>
     </metadata>
-    <files />
+    <files>
+        <file src="..\GitmoSharp\bin\Debug\GitmoSharp.dll" target="lib\GitmoSharp.dll" />
+    </files>
 </package>
