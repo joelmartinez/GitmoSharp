@@ -41,6 +41,11 @@ namespace GitmoSharp {
             }
         }
 
+        public void FetchLatest()
+        {
+
+        }
+
         /// <summary>Checks to see whether the path is a valid git repository.</summary>
         public static bool IsValid(string path)
         {
