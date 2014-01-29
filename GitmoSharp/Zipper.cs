@@ -42,7 +42,8 @@ namespace GitmoSharp {
                 meta = Deserialize(contents);
             }
             else {
-                meta = new ArchiveMeta();
+                // if the config file doesn't exist, we should rebuild;
+                return true;
             }
 
             return meta.DateCreated < lastUpdated;

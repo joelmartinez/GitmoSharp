@@ -78,6 +78,31 @@ namespace GitmoSharp.Test
             Assert.IsFalse(IO.File.Exists(configFile));
         }
 
+
+        [TestMethod]
+        public void TestResetZipConfig_withRebuild()
+        {
+            string repositoryPath = paths[1];
+
+            IO.File.WriteAllText(IO.Path.Combine(repositoryPath, "someOtherfile.txt"), DateTime.Now.ToString());
+
+            Gitmo g = new Gitmo(repositoryPath);
+
+            string archiveID = "theid_clean_withrebuild";
+            string relativePathInRepository = ""; // whole thing
+            string outPath = "Test";
+
+            g.Zip(archiveID, relativePathInRepository, outPath);
+
+            string configFile = g.ResetZipConfig(archiveID, outPath);
+
+
+            bool wasRebuilt = g.Zip(archiveID, relativePathInRepository, outPath);
+
+            Assert.IsTrue(wasRebuilt, "Archive wasn't rebuilt after resetting the config");
+            Assert.IsTrue(IO.File.Exists(configFile), "Config File wasn't recreated");
+        }
+
         [TestMethod]
         public void TestZipDirectory_WithCommit()
         {
