@@ -49,6 +49,8 @@ namespace GitmoSharp {
 
         }
 
+        /// <summary>Creates the archive</summary>
+        /// <param name="sourcePath">The path to create the archive from.</param>
         public void WriteArchive(string sourcePath)
         {
             if (File.Exists(this.ArchiveFilePath)) File.Delete(this.ArchiveFilePath);

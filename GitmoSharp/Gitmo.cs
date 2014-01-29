@@ -48,6 +48,18 @@ namespace GitmoSharp {
             return false;
         }
 
+        /// <summary>Delete the zip file's configuration file. This ensures a rebuild next time Zip is called.</summary>
+        /// <returns>The path to the configuration file that was deleted. It shouldn't exist at this point.</returns>
+        public string ResetZipConfig(string id, string outpath)
+        {
+            Zipper z = new Zipper(id, outpath);
+            if (IO.File.Exists(z.ConfigFilePath)) {
+                IO.File.Delete(z.ConfigFilePath);
+            }
+
+            return z.ConfigFilePath;
+        }
+
         public void FetchLatest()
         {
             throw new NotImplementedException();

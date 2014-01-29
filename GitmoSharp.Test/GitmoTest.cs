@@ -59,6 +59,26 @@ namespace GitmoSharp.Test
         }
 
         [TestMethod]
+        public void TestResetZipConfig()
+        {
+            string repositoryPath = paths[1];
+
+            IO.File.WriteAllText(IO.Path.Combine(repositoryPath, "someOtherfile.txt"), DateTime.Now.ToString());
+
+            Gitmo g = new Gitmo(repositoryPath);
+
+            string archiveID = "theid_clean";
+            string relativePathInRepository = ""; // whole thing
+            string outPath = "Test";
+
+            g.Zip(archiveID, relativePathInRepository, outPath);
+
+            string configFile = g.ResetZipConfig(archiveID, outPath);
+
+            Assert.IsFalse(IO.File.Exists(configFile));
+        }
+
+        [TestMethod]
         public void TestZipDirectory_WithCommit()
         {
             string repositoryPath = paths[2];
