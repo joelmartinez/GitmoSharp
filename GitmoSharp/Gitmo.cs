@@ -29,21 +29,34 @@ namespace GitmoSharp {
         /// <param name="relativePathToZip">The relative path inside the git repo that you want to create an archive for.</param>
         /// <param name="outPath">The output path for the zip file (and a related meta file). This should not be a directory in 
         /// the git repository.</param>
-        public void Zip(string id, string relativePathToZip, string outPath)
+        public bool Zip(string id, string relativePathToZip, string outPath)
         {
             string pathToZip = IO.Path.Combine(rootPath, relativePathToZip);
 
-            DateTimeOffset lastUpdated = DateTimeOffset.MinValue; // TODO: this should come from git history
+            Commit latestCommit = repository.Commits.LatestCommitFor(relativePathToZip);
+            DateTimeOffset lastUpdated = DateTimeOffset.Now;
+            if (latestCommit != null) {
+                lastUpdated = latestCommit.Author.When;
+            }
 
             Zipper z = new Zipper(id, outPath);
             if (z.DoesArchiveRequireRebuilding(lastUpdated)) {
                 z.WriteArchive(pathToZip);
+                return true;
             }
+
+            return false;
         }
 
         public void FetchLatest()
         {
+            throw new NotImplementedException();
+        }
 
+        public void CommitChanges(string message)
+        {
+            repository.Index.Stage("*");
+            repository.Commit(message);
         }
 
         /// <summary>Checks to see whether the path is a valid git repository.</summary>

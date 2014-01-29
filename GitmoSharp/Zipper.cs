@@ -24,6 +24,9 @@ namespace GitmoSharp {
         {
             this.id = id;
             this.outpath = rootPath;
+
+
+            if (!Directory.Exists(this.outpath)) Directory.CreateDirectory(this.outpath);
         }
 
         /// <summary>Dictates whether the archive needs to be created.</summary>
