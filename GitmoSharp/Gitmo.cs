@@ -60,11 +60,39 @@ namespace GitmoSharp {
             return z.ConfigFilePath;
         }
 
-        public void FetchLatest()
+        /// <summary>Fetches the latest from the remote, and checks out the remote branch (ie. does not attempt to merge).</summary>
+        /// <param name="remoteName">'origin' by default.</param>
+        /// <param name="branch">'master' by default</param>
+        /// <param name="username">null by default</param>
+        /// <param name="password">null by default</param>
+        public void FetchLatest(string remoteName="origin", string branch = "master", string username=null, string password=null)
         {
-            throw new NotImplementedException();
+            var remote = repository.Network.Remotes[remoteName];
+
+            if (!string.IsNullOrWhiteSpace(username)) {
+                repository.Network.Fetch(remote, tagFetchMode: TagFetchMode.None, credentials: new Credentials { Username = username, Password = password });
+            }
+            else {
+                repository.Network.Fetch(remote, tagFetchMode: TagFetchMode.None);
+            }
+
+            var remoteBranch = repository.Branches.Single(b => b.Name == string.Format("{0}/{1}", remoteName, branch));
+
+            repository.Checkout(remoteBranch);
         }
 
+        /// <summary>Fetches the latest from the remote, and checks out the remote branch (ie. does not attempt to merge).</summary>
+        /// <param name="remoteName">'origin' by default.</param>
+        /// <param name="branch">'master' by default</param>
+        /// <param name="username">null by default</param>
+        /// <param name="password">null by default</param>
+        public Task FetchLatestAsync(string remoteName = "origin", string branch = "master", string username = null, string password = null)
+        {
+            return Task.Factory.StartNew(() => FetchLatest(remoteName, branch, username, password));
+        }
+
+        /// <summary>Stages and Commits all pending changes.</summary>
+        /// <param name="message">The comment message to include.</param>
         public void CommitChanges(string message)
         {
             repository.Index.Stage("*");
