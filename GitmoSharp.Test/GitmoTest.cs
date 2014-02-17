@@ -15,6 +15,8 @@ namespace GitmoSharp.Test
                                       "Test/InitializedWithCommit", //2
                                       "Test/InitializedA", //3
                                       "Test/InitializedB", //4
+                                      "Test/InitializedA2", //5
+                                      "Test/InitializedB2", //6
                                       "Test"
                                  };
         [TestInitialize]
@@ -75,7 +77,32 @@ namespace GitmoSharp.Test
             gitB.FetchLatest(remoteName: "repoA");
 
             AssertFileExists(repoB, "a.txt");
-            //AssertFileExists(repoB, "b.txt");
+            AssertFileContent(repoB, "a.txt", "A Content");
+        }
+
+
+        [TestMethod]
+        public void TestFetchWithUncommitedModifiedChanges()
+        {
+            string repoA = paths[5];
+            string repoB = paths[6];
+
+            // first, we set up the repositories
+            Gitmo gitA = new Gitmo(repoA);
+            Write(repoA, "first.txt", "first Content");
+            gitA.CommitChanges("initial"); // first commit, to ensure that the master branch exists
+
+            Gitmo gitB = new Gitmo(repoB);
+            gitB.AddRemote("repoA", repoA);
+            gitB.FetchLatest(remoteName: "repoA");
+
+            // now, we set up a situation for a merge issue
+
+            Write(repoB, "first.txt", "B Content in first"); // then write an uncommitted change to repo B
+            gitB.FetchLatest(remoteName: "repoA");
+
+            AssertFileExists(repoB, "first.txt");
+            AssertFileContent(repoB, "first.txt", "first Content");
         }
 
         private static void Write(string repositoryPath, string filename, string content)
@@ -86,6 +113,12 @@ namespace GitmoSharp.Test
         private static void AssertFileExists(string repositoryPath, string filename)
         {
             Assert.IsTrue(IO.File.Exists(IO.Path.Combine(repositoryPath, filename)));
+        }
+        private static void AssertFileContent(string repositoryPath, string filename, string expectedContent)
+        {
+            string path = IO.Path.Combine(repositoryPath, filename);
+            string actualContent = IO.File.ReadAllText(path);
+            Assert.AreEqual(expectedContent, actualContent);
         }
 
         [TestMethod]

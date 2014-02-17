@@ -78,17 +78,8 @@ namespace GitmoSharp {
         public void FetchLatest(string remoteName="origin", string branch = "master", string username=null, string password=null)
         {
             if (HasChanges) {
-                // uh oh ... something has gone awry. We should reset
-                repository.Reset(ResetMode.Soft);
-                var status = repository.Index.RetrieveStatus();
-                foreach (var file in status.Untracked) {
-                    string fpath = IO.Path.Combine(rootPath, file.FilePath);
-                    IO.File.Delete(fpath);
-                }
-
-                repository.CheckoutPaths(
-                    string.Format("{0}/{1}", remoteName, branch),
-                    status.Modified.Select(m => m.FilePath));
+                // uh oh ... something has gone awry. We should reset before attempting to fetch changes
+                Reset();
             }
 
             var remote = repository.Network.Remotes[remoteName];
@@ -103,6 +94,17 @@ namespace GitmoSharp {
             var remoteBranch = repository.Branches.Single(b => b.Name == string.Format("{0}/{1}", remoteName, branch));
 
             repository.Checkout(remoteBranch);
+        }
+
+        /// <summary>Resets the repository to the HEAD commit, and also deletes untracked files</summary>
+        public void Reset()
+        {
+            repository.Reset(ResetMode.Hard);
+            var status = repository.Index.RetrieveStatus();
+            foreach (var file in status.Untracked) {
+                string fpath = IO.Path.Combine(rootPath, file.FilePath);
+                IO.File.Delete(fpath);
+            }
         }
 
         /// <summary>Fetches the latest from the remote, and checks out the remote branch (ie. does not attempt to merge).</summary>
