@@ -8,10 +8,20 @@ using IO = System.IO;
 using LibGit2Sharp;
 
 namespace GitmoSharp {
-    /// <summary>Helper methods for Git repositories.</summary>
+    /// <summary>This library includes methods for an automated process to work with updating a remote repository. This includes making archives of 
+    /// certain folders.</summary>
     public class Gitmo {
         private string rootPath;
         private Repository repository;
+
+        public bool HasChanges
+        {
+            get
+            {
+                RepositoryStatus status = repository.Index.RetrieveStatus();
+                return status.IsDirty;
+            }
+        }
 
         /// <summary>Initializes Gitmo to be able to operate on a git repository. </summary>
         /// <param name="path">The root path to the git repository in question. Must be a valid git repo.</param>
@@ -67,6 +77,15 @@ namespace GitmoSharp {
         /// <param name="password">null by default</param>
         public void FetchLatest(string remoteName="origin", string branch = "master", string username=null, string password=null)
         {
+            if (HasChanges) {
+                // uh oh ... something has gone awry. We should reset
+                repository.Reset(ResetMode.Soft);
+                var status = repository.Index.RetrieveStatus();
+                foreach (var file in status.Untracked) {
+                    IO.File.Delete(file.FilePath);
+                }
+            }
+
             var remote = repository.Network.Remotes[remoteName];
 
             if (!string.IsNullOrWhiteSpace(username)) {
@@ -97,6 +116,20 @@ namespace GitmoSharp {
         {
             repository.Index.Stage("*");
             repository.Commit(message);
+        }
+
+        /// <summary>Adds a remote if it is missing. No-op if it's already there.</summary>
+        public void AddRemote(string remoteName, string remoteLocation)
+        {
+            Remote rem = null;
+            try {
+                rem = repository.Network.Remotes[remoteName];
+            }
+            catch { }
+
+            if (rem == null) {
+                repository.Network.Remotes.Add(remoteName, remoteLocation);
+            }
         }
 
         /// <summary>Checks to see whether the path is a valid git repository.</summary>

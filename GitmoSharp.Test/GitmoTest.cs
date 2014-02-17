@@ -13,6 +13,8 @@ namespace GitmoSharp.Test
                                      "Test/NotInitialized", //0
                                       "Test/Initialized",   //1
                                       "Test/InitializedWithCommit", //2
+                                      "Test/InitializedA", //3
+                                      "Test/InitializedB", //4
                                       "Test"
                                  };
         [TestInitialize]
@@ -41,11 +43,57 @@ namespace GitmoSharp.Test
         }
 
         [TestMethod]
+        public void TestHasChanges()
+        {
+            string rep = paths[4];
+            Gitmo git = new Gitmo(rep);
+            Write(rep, "dirty.txt", "drrrty");
+
+            Assert.IsTrue(git.HasChanges);
+        }
+
+        [TestMethod]
+        public void TestFetchWithPendingChanges()
+        {
+            string repoA = paths[3];
+            string repoB = paths[4];
+
+            // first, we set up the repositories
+            Gitmo gitA = new Gitmo(repoA);
+            Write(repoA, "first.txt", "first Content");
+            gitA.CommitChanges("initial"); // first commit, to ensure that the master branch exists
+
+            Gitmo gitB = new Gitmo(repoB);
+            gitB.AddRemote("repoA", repoA);
+            gitB.FetchLatest(remoteName: "repoA");
+
+            // now, we set up a situation for a merge issue
+            Write(repoA, "a.txt", "A Content");
+            gitA.CommitChanges("changes from A"); // we commit a change in repo A
+
+            Write(repoB, "a.txt", "B Content"); // then write an uncommitted change to repo B
+            gitB.FetchLatest(remoteName: "repoA");
+
+            AssertFileExists(repoB, "a.txt");
+            //AssertFileExists(repoB, "b.txt");
+        }
+
+        private static void Write(string repositoryPath, string filename, string content)
+        {
+            IO.File.WriteAllText(IO.Path.Combine(repositoryPath, filename), content);
+        }
+
+        private static void AssertFileExists(string repositoryPath, string filename)
+        {
+            Assert.IsTrue(IO.File.Exists(IO.Path.Combine(repositoryPath, filename)));
+        }
+
+        [TestMethod]
         public void TestZipDirectory()
         {
             string repositoryPath = paths[1];
 
-            IO.File.WriteAllText(IO.Path.Combine(repositoryPath, "somefile.txt"), "somecontent");
+            Write(repositoryPath, "somefile.txt", "somecontent");
 
             Gitmo g = new Gitmo(repositoryPath);
 
