@@ -128,13 +128,7 @@ namespace GitmoSharp {
         /// <summary>Adds a remote if it is missing. No-op if it's already there.</summary>
         public void AddRemote(string remoteName, string remoteLocation)
         {
-            Remote rem = null;
-            try {
-                rem = repository.Network.Remotes[remoteName];
-            }
-            catch { }
-
-            if (rem == null) {
+            if (!repository.Network.Remotes.Any(r => r.Name == remoteName)) {
                 repository.Network.Remotes.Add(remoteName, remoteLocation);
             }
         }
