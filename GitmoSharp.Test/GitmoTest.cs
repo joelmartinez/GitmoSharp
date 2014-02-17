@@ -53,7 +53,7 @@ namespace GitmoSharp.Test
         }
 
         [TestMethod]
-        public void TestFetchWithPendingChanges()
+        public void TestFetchWithUntrackedChanges()
         {
             string repoA = paths[3];
             string repoB = paths[4];

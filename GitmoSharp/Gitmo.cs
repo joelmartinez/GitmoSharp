@@ -82,8 +82,13 @@ namespace GitmoSharp {
                 repository.Reset(ResetMode.Soft);
                 var status = repository.Index.RetrieveStatus();
                 foreach (var file in status.Untracked) {
-                    IO.File.Delete(file.FilePath);
+                    string fpath = IO.Path.Combine(rootPath, file.FilePath);
+                    IO.File.Delete(fpath);
                 }
+
+                repository.CheckoutPaths(
+                    string.Format("{0}/{1}", remoteName, branch),
+                    status.Modified.Select(m => m.FilePath));
             }
 
             var remote = repository.Network.Remotes[remoteName];
