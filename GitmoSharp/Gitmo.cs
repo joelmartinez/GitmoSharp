@@ -18,7 +18,7 @@ namespace GitmoSharp {
         {
             get
             {
-                RepositoryStatus status = repository.Index.RetrieveStatus();
+                RepositoryStatus status = repository.RetrieveStatus();
                 return status.IsDirty;
             }
         }
@@ -84,11 +84,14 @@ namespace GitmoSharp {
 
             var remote = repository.Network.Remotes[remoteName];
 
+            var options = new FetchOptions() { TagFetchMode = TagFetchMode.None };
             if (!string.IsNullOrWhiteSpace(username)) {
-                repository.Network.Fetch(remote, tagFetchMode: TagFetchMode.None, credentials: new Credentials { Username = username, Password = password });
+                var creds = new UsernamePasswordCredentials { Username = username, Password = password };
+                options.CredentialsProvider = (_url, _user, _cred) => creds;
+                repository.Network.Fetch(remote, options: options);
             }
             else {
-                repository.Network.Fetch(remote, tagFetchMode: TagFetchMode.None);
+                repository.Network.Fetch(remote, options:options);
             }
 
             var remoteBranch = repository.Branches.Single(b => b.Name == string.Format("{0}/{1}", remoteName, branch));
@@ -100,7 +103,7 @@ namespace GitmoSharp {
         public void Reset()
         {
             repository.Reset(ResetMode.Hard);
-            var status = repository.Index.RetrieveStatus();
+            var status = repository.RetrieveStatus();
             foreach (var file in status.Untracked) {
                 string fpath = IO.Path.Combine(rootPath, file.FilePath);
                 IO.File.Delete(fpath);
@@ -121,7 +124,7 @@ namespace GitmoSharp {
         /// <param name="message">The comment message to include.</param>
         public void CommitChanges(string message)
         {
-            repository.Index.Stage("*");
+            repository.Stage("*");
             repository.Commit(message);
         }
 

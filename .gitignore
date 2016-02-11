@@ -1,7 +1,7 @@
 #OS junk files
 [Tt]humbs.db
 *.DS_Store
-
+packages
 #MonoDevelop files
 *.userprefs
 
