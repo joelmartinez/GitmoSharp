@@ -43,10 +43,17 @@ namespace GitmoSharp {
         {
             string pathToZip = IO.Path.Combine(rootPath, relativePathToZip);
 
-            Commit latestCommit = repository.Commits.LatestCommitFor(relativePathToZip);
+            var files = IO.Directory
+                .GetFiles(pathToZip, "*", IO.SearchOption.AllDirectories)
+                .Select(f => new IO.FileInfo(f).LastWriteTimeUtc)
+                .OrderByDescending(t => t);
+            var latestFileUpdated = files
+                .FirstOrDefault();
+
+            //Commit latestCommit = repository.Commits.LatestCommitFor(relativePathToZip);
             DateTimeOffset lastUpdated = DateTimeOffset.Now;
-            if (latestCommit != null) {
-                lastUpdated = latestCommit.Author.When;
+            if (latestFileUpdated != null) {
+                lastUpdated = latestFileUpdated;
             }
 
             Zipper z = new Zipper(id, outPath);
