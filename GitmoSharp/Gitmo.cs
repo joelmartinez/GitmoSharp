@@ -158,7 +158,7 @@ namespace GitmoSharp {
         private void ValidatePath()
         {
             if (string.IsNullOrWhiteSpace(rootPath)) {
-                throw new ArgumentNullException("path");
+                throw new ArgumentNullException(nameof(rootPath));
             }
             if (!IO.Directory.Exists(rootPath)) {
                 throw new ArgumentException(string.Format("path doesn't exist: {0}", rootPath));
