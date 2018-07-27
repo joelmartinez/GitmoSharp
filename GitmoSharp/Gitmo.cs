@@ -10,9 +10,12 @@ using LibGit2Sharp;
 namespace GitmoSharp {
     /// <summary>This library includes methods for an automated process to work with updating a remote repository. This includes making archives of 
     /// certain folders.</summary>
-    public class Gitmo {
+    public class Gitmo : IDisposable {
         private string rootPath;
         private Repository repository;
+
+        public string Name { get; set; }
+        public string Email { get; set; }
 
         public bool HasChanges
         {
@@ -23,6 +26,12 @@ namespace GitmoSharp {
             }
         }
 
+        public Gitmo(string path, string name, string email) : this(path)
+        {
+            this.Name = name;
+            this.Email = email;
+        }
+
         /// <summary>Initializes Gitmo to be able to operate on a git repository. </summary>
         /// <param name="path">The root path to the git repository in question. Must be a valid git repo.</param>
         public Gitmo(string path)
@@ -30,8 +39,15 @@ namespace GitmoSharp {
             rootPath = path;
 
             ValidatePath();
+            ValidateSignature();
 
             repository = new Repository(path);
+        }
+
+        private void ValidateSignature()
+        {
+            this.Name = string.IsNullOrWhiteSpace(this.Name) ? "GitmoSharp" : this.Name;
+            this.Email = string.IsNullOrWhiteSpace(this.Email) ? "auto_gitmo@fakeemail.com" : this.Email;
         }
 
         /// <summary>Creates, or updates a zip archive of the folder in a git repository.</summary>
@@ -95,15 +111,16 @@ namespace GitmoSharp {
             if (!string.IsNullOrWhiteSpace(username)) {
                 var creds = new UsernamePasswordCredentials { Username = username, Password = password };
                 options.CredentialsProvider = (_url, _user, _cred) => creds;
-                repository.Network.Fetch(remote, options: options);
+                repository.Network.Fetch(remote.Name, refspecs:new string[0], options: options);
             }
             else {
-                repository.Network.Fetch(remote, options:options);
+                repository.Network.Fetch(remote.Name, refspecs: new string[0], options:options);
             }
 
-            var remoteBranch = repository.Branches.Single(b => b.Name == string.Format("{0}/{1}", remoteName, branch));
-
-            repository.Checkout(remoteBranch);
+            var remoteBranch = repository.Branches.Single(b => b.FriendlyName == string.Format("{0}/{1}", remoteName, branch));
+            CheckoutOptions checkoutoptions = new CheckoutOptions() { CheckoutModifiers = CheckoutModifiers.None };
+            repository.Checkout(remoteBranch.Commits.First().Tree, new string[] { "*" }, checkoutoptions);
+            repository.Refs.UpdateTarget(repository.Refs.Head, remoteBranch.Tip.Id);
         }
 
         /// <summary>Resets the repository to the HEAD commit, and also deletes untracked files</summary>
@@ -131,8 +148,11 @@ namespace GitmoSharp {
         /// <param name="message">The comment message to include.</param>
         public void CommitChanges(string message)
         {
-            repository.Stage("*");
-            repository.Commit(message);
+            Commands.Stage(repository, "*");
+
+            this.ValidateSignature();
+            Signature sig = new Signature(this.Name, this.Email, DateTimeOffset.Now);
+            repository.Commit(message, sig, sig);
         }
 
         /// <summary>Adds a remote if it is missing. No-op if it's already there.</summary>
@@ -153,6 +173,35 @@ namespace GitmoSharp {
         public static void Init(string path)
         {
             Repository.Init(path);
+        }
+
+        public static void DeleteRepository(string path)
+        {
+            DeleteReadOnlyDirectory(path);
+        }
+        /// <summary>
+        /// Recursively deletes a directory as well as any subdirectories and files. If the files are read-only, they are flagged as normal and then deleted.
+        /// </summary>
+        /// <param name="directory">The name of the directory to remove.</param>
+        /// <remarks>This method sourced originally from: https://stackoverflow.com/a/26372070</remarks>
+        private static void DeleteReadOnlyDirectory(string directory)
+        {
+            foreach (var subdirectory in IO.Directory.EnumerateDirectories(directory))
+            {
+                DeleteReadOnlyDirectory(subdirectory);
+            }
+            foreach (var fileName in IO.Directory.EnumerateFiles(directory))
+            {
+                var fileInfo = new IO.FileInfo(fileName);
+                fileInfo.Attributes = IO.FileAttributes.Normal;
+                fileInfo.Delete();
+            }
+            IO.Directory.Delete(directory);
+        }
+
+        public void Dispose()
+        {
+            repository.Dispose();
         }
 
         private void ValidatePath()

@@ -1,87 +1,121 @@
 ﻿using System;
 using IO = System.IO;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using GitmoSharp;
 using System.Threading.Tasks;
+using System.Threading;
+using System.Linq;
+using Xunit;
+using System.Collections.Generic;
 
 namespace GitmoSharp.Test
 {
-    [TestClass]
-    public class GitmoTest
+    public class GitmoTest : IDisposable
     {
+        private static object _object = new object();
+
+        private string testpath = IO.Path.Combine(IO.Path.GetTempPath(), "GitmoTests");
+
         private string[] paths = { 
-                                     "Test/NotInitialized", //0
-                                      "Test/Initialized",   //1
-                                      "Test/InitializedWithCommit", //2
-                                      "Test/InitializedA", //3
-                                      "Test/InitializedB", //4
-                                      "Test/InitializedA2", //5
-                                      "Test/InitializedB2", //6
+                                     "Test\\NotInitialized", //0
+                                      "Test\\Initialized",   //1
+                                      "Test\\InitializedWithCommit", //2
+                                      "Test\\InitializedA", //3
+                                      "Test\\InitializedB", //4
+                                      "Test\\InitializedA2", //5
+                                      "Test\\InitializedB2", //6
                                       "Test"
                                  };
-        [TestInitialize]
-        public void TestInit()
+       
+        public IEnumerable<string> FullPaths
         {
-            foreach (var path in paths) {
-                IO.Directory.CreateDirectory(path);
+            get
+            {
+                return paths.Select(p => IO.Path.Combine(testpath, p));
+            }
+        }
+        public GitmoTest()
+        {
+            //Monitor.Enter(_object);
+            paths = FullPaths.ToArray();
 
-                if (path.StartsWith("Test/Initialized")) {
+            try {
+                string testdir = IO.Path.Combine(testpath, "Test");
+                if (IO.Directory.Exists(testdir)) Gitmo.DeleteRepository(testdir);
+            }
+            catch (UnauthorizedAccessException uaex)
+            {
+                throw new ApplicationException($"error cleaning: {uaex.Message} for Test", uaex);
+            }
+
+            foreach (var path in paths) {
+
+                try
+                {
+                    IO.Directory.CreateDirectory(path);
+                }
+                catch (UnauthorizedAccessException uaex)
+                {
+                    throw new ApplicationException($"error creating: {uaex.Message} for {path}", uaex);
+                }
+                if (path.StartsWith(IO.Path.Combine(testpath, "Test\\Initialized"))) {
                     Gitmo.Init(path);
                 }
             }
         }
-
-        [TestCleanup]
-        public void TestClean()
+        
+        public void Dispose()
         {
             foreach (var path in paths) {
                 if (IO.Directory.Exists(path)) {
                     try {
                         IO.Directory.Delete(path, true);
                     }
-                    catch (Exception ex) { }
+                    catch (Exception) { }
                 }
             }
+            //Monitor.Exit(_object);
         }
 
-        [TestMethod]
+        [Fact]
         public void TestHasChanges()
         {
             string rep = paths[4];
             Gitmo git = new Gitmo(rep);
             Write(rep, "dirty.txt", "drrrty");
 
-            Assert.IsTrue(git.HasChanges);
+            Assert.True(git.HasChanges);
         }
 
-        [TestMethod]
+        [Fact]
         public void TestFetchWithUntrackedChanges()
         {
             string repoA = paths[3];
             string repoB = paths[4];
 
             // first, we set up the repositories
-            Gitmo gitA = new Gitmo(repoA);
-            Write(repoA, "first.txt", "first Content");
-            gitA.CommitChanges("initial"); // first commit, to ensure that the master branch exists
+            using (Gitmo gitA = new Gitmo(repoA))
+            using (Gitmo gitB = new Gitmo(repoB))
+            {
+                Write(repoA, "first.txt", "first Content");
+                gitA.CommitChanges("initial"); // first commit, to ensure that the master branch exists
+                
+                gitB.AddRemote("repoA", repoA);
+                gitB.FetchLatest(remoteName: "repoA");
 
-            Gitmo gitB = new Gitmo(repoB);
-            gitB.AddRemote("repoA", repoA);
-            gitB.FetchLatest(remoteName: "repoA");
+                // now, we set up a situation for a merge issue
+                Write(repoA, "a.txt", "A Content");
+                gitA.CommitChanges("changes from A"); // we commit a change in repo A
 
-            // now, we set up a situation for a merge issue
-            Write(repoA, "a.txt", "A Content");
-            gitA.CommitChanges("changes from A"); // we commit a change in repo A
+                Write(repoB, "a.txt", "B Content"); // then write an uncommitted change to repo B
+                gitB.FetchLatest(remoteName: "repoA");
 
-            Write(repoB, "a.txt", "B Content"); // then write an uncommitted change to repo B
-            gitB.FetchLatest(remoteName: "repoA");
-
-            AssertFileExists(repoB, "a.txt");
-            AssertFileContent(repoB, "a.txt", "A Content");
+                AssertFileExists(repoB, "a.txt");
+                AssertFileContent(repoB, "a.txt", "A Content");
+            }
         }
 
 
-        [TestMethod]
+        [Fact]
         public void TestFetchWithUncommitedModifiedChanges()
         {
             string repoA = paths[5];
@@ -112,16 +146,16 @@ namespace GitmoSharp.Test
 
         private static void AssertFileExists(string repositoryPath, string filename)
         {
-            Assert.IsTrue(IO.File.Exists(IO.Path.Combine(repositoryPath, filename)));
+            Assert.True(IO.File.Exists(IO.Path.Combine(repositoryPath, filename)));
         }
         private static void AssertFileContent(string repositoryPath, string filename, string expectedContent)
         {
             string path = IO.Path.Combine(repositoryPath, filename);
             string actualContent = IO.File.ReadAllText(path);
-            Assert.AreEqual(expectedContent, actualContent);
+            Assert.Equal(expectedContent, actualContent);
         }
 
-        [TestMethod]
+        [Fact]
         public void TestZipDirectory()
         {
             string repositoryPath = paths[1];
@@ -136,10 +170,10 @@ namespace GitmoSharp.Test
 
             g.Zip(archiveID, relativePathInRepository, outPath);
 
-            Assert.IsTrue(IO.File.Exists("Test/theid.zip"));
+            Assert.True(IO.File.Exists("Test/theid.zip"));
         }
 
-        [TestMethod]
+        [Fact]
         public void TestResetZipConfig()
         {
             string repositoryPath = paths[1];
@@ -156,11 +190,11 @@ namespace GitmoSharp.Test
 
             string configFile = g.ResetZipConfig(archiveID, outPath);
 
-            Assert.IsFalse(IO.File.Exists(configFile));
+            Assert.False(IO.File.Exists(configFile));
         }
 
 
-        [TestMethod]
+        [Fact]
         public void TestResetZipConfig_withRebuild()
         {
             string repositoryPath = paths[1];
@@ -180,11 +214,11 @@ namespace GitmoSharp.Test
 
             bool wasRebuilt = g.Zip(archiveID, relativePathInRepository, outPath);
 
-            Assert.IsTrue(wasRebuilt, "Archive wasn't rebuilt after resetting the config");
-            Assert.IsTrue(IO.File.Exists(configFile), "Config File wasn't recreated");
+            Assert.True(wasRebuilt, "Archive wasn't rebuilt after resetting the config");
+            Assert.True(IO.File.Exists(configFile), "Config File wasn't recreated");
         }
 
-        [TestMethod]
+        [Fact]
         public void TestZipDirectory_WithCommit()
         {
             string repositoryPath = paths[2];
@@ -200,33 +234,33 @@ namespace GitmoSharp.Test
             string outPath = "Test/out";
 
             bool didCreateZip = g.Zip(archiveID, relativePathInRepository, outPath);
-            Assert.IsTrue(didCreateZip, "first zip not made");
+            Assert.True(didCreateZip, "first zip not made");
 
             didCreateZip = g.Zip(archiveID, relativePathInRepository, outPath);
-            Assert.IsFalse(didCreateZip, "second zip attempt still made a zip");
+            Assert.False(didCreateZip, "second zip attempt still made a zip");
 
             IO.File.WriteAllText(IO.Path.Combine(repositoryPath, "somedir", "asecondfile.txt"), DateTime.Now.ToString());
             Task.Delay(1000).Wait(); // required delay to make sure the second commit has a different timestamp;
             g.CommitChanges("second commit");
             didCreateZip = g.Zip(archiveID, relativePathInRepository, outPath);
-            Assert.IsTrue(didCreateZip, "did not create the zip after the second try");
+            Assert.True(didCreateZip, "did not create the zip after the second try");
 
-            Assert.IsTrue(IO.File.Exists("Test/out/theid.zip"));
+            Assert.True(IO.File.Exists("Test/out/theid.zip"));
         }
 
-        [TestMethod]
+        [Fact]
         public void TestIsValid()
         {
             bool result = Gitmo.IsValid(paths[0]);
 
-            Assert.IsFalse(result);
+            Assert.False(result);
         }
 
-        [TestMethod]
+        [Fact]
         public void TestIsValid_True()
         {
             string path = paths[1];
-            Assert.IsTrue(Gitmo.IsValid(path));
+            Assert.True(Gitmo.IsValid(path));
         }
     }
 }
