@@ -6,16 +6,17 @@ using System.Threading;
 using System.Linq;
 using Xunit;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace GitmoSharp.Test
 {
-    public class GitmoTest : IDisposable
+    public class GitmoTest
     {
         private static object _object = new object();
 
         private string testpath = IO.Path.Combine(IO.Path.GetTempPath(), "GitmoTests");
 
-        private string[] paths = { 
+        private string[] basepaths = { 
                                      "Test\\NotInitialized", //0
                                       "Test\\Initialized",   //1
                                       "Test\\InitializedWithCommit", //2
@@ -25,21 +26,14 @@ namespace GitmoSharp.Test
                                       "Test\\InitializedB2", //6
                                       "Test"
                                  };
-       
-        public IEnumerable<string> FullPaths
-        {
-            get
-            {
-                return paths.Select(p => IO.Path.Combine(testpath, p));
-            }
-        }
-        public GitmoTest()
+ 
+        private string[] InitializeGitmoTest([CallerMemberName]string memberName = "")
         {
             //Monitor.Enter(_object);
-            paths = FullPaths.ToArray();
+            var pathsToUse = basepaths.Select(p => IO.Path.Combine(testpath, memberName, p)).ToArray();
 
             try {
-                string testdir = IO.Path.Combine(testpath, "Test");
+                string testdir = IO.Path.Combine(testpath, memberName, "Test");
                 if (IO.Directory.Exists(testdir)) Gitmo.DeleteRepository(testdir);
             }
             catch (UnauthorizedAccessException uaex)
@@ -47,7 +41,7 @@ namespace GitmoSharp.Test
                 throw new ApplicationException($"error cleaning: {uaex.Message} for Test", uaex);
             }
 
-            foreach (var path in paths) {
+            foreach (var path in pathsToUse) {
 
                 try
                 {
@@ -57,28 +51,18 @@ namespace GitmoSharp.Test
                 {
                     throw new ApplicationException($"error creating: {uaex.Message} for {path}", uaex);
                 }
-                if (path.StartsWith(IO.Path.Combine(testpath, "Test\\Initialized"))) {
+                if (path.StartsWith(IO.Path.Combine(testpath, memberName, "Test\\Initialized"))) {
                     Gitmo.Init(path);
                 }
             }
+            return pathsToUse;
         }
-        
-        public void Dispose()
-        {
-            foreach (var path in paths) {
-                if (IO.Directory.Exists(path)) {
-                    try {
-                        IO.Directory.Delete(path, true);
-                    }
-                    catch (Exception) { }
-                }
-            }
-            //Monitor.Exit(_object);
-        }
+
 
         [Fact]
         public void TestHasChanges()
         {
+            var paths = InitializeGitmoTest();
             string rep = paths[4];
             Gitmo git = new Gitmo(rep);
             Write(rep, "dirty.txt", "drrrty");
@@ -89,6 +73,7 @@ namespace GitmoSharp.Test
         [Fact]
         public void TestFetchWithUntrackedChanges()
         {
+            var paths = InitializeGitmoTest();
             string repoA = paths[3];
             string repoB = paths[4];
 
@@ -118,6 +103,7 @@ namespace GitmoSharp.Test
         [Fact]
         public void TestFetchWithUncommitedModifiedChanges()
         {
+            var paths = InitializeGitmoTest();
             string repoA = paths[5];
             string repoB = paths[6];
 
@@ -158,6 +144,7 @@ namespace GitmoSharp.Test
         [Fact]
         public void TestZipDirectory()
         {
+            var paths = InitializeGitmoTest();
             string repositoryPath = paths[1];
 
             Write(repositoryPath, "somefile.txt", "somecontent");
@@ -176,6 +163,7 @@ namespace GitmoSharp.Test
         [Fact]
         public void TestResetZipConfig()
         {
+            var paths = InitializeGitmoTest();
             string repositoryPath = paths[1];
 
             IO.File.WriteAllText(IO.Path.Combine(repositoryPath, "someOtherfile.txt"), DateTime.Now.ToString());
@@ -197,6 +185,7 @@ namespace GitmoSharp.Test
         [Fact]
         public void TestResetZipConfig_withRebuild()
         {
+            var paths = InitializeGitmoTest();
             string repositoryPath = paths[1];
 
             IO.File.WriteAllText(IO.Path.Combine(repositoryPath, "someOtherfile.txt"), DateTime.Now.ToString());
@@ -221,6 +210,7 @@ namespace GitmoSharp.Test
         [Fact]
         public void TestZipDirectory_WithCommit()
         {
+            var paths = InitializeGitmoTest();
             string repositoryPath = paths[2];
             IO.Directory.CreateDirectory(IO.Path.Combine(repositoryPath, "somedir"));
 
@@ -251,6 +241,7 @@ namespace GitmoSharp.Test
         [Fact]
         public void TestIsValid()
         {
+            var paths = InitializeGitmoTest();
             bool result = Gitmo.IsValid(paths[0]);
 
             Assert.False(result);
@@ -259,6 +250,7 @@ namespace GitmoSharp.Test
         [Fact]
         public void TestIsValid_True()
         {
+            var paths = InitializeGitmoTest();
             string path = paths[1];
             Assert.True(Gitmo.IsValid(path));
         }
