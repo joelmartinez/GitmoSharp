@@ -20,6 +20,8 @@ namespace GitmoSharp {
 
         public void Initialize(Repository rep)
         {
+            if (isInitialized) return;
+
             var allCommits = rep.Head.Commits;
             GitHistoryIndex index = this;
 
