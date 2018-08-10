@@ -29,8 +29,13 @@ namespace GitmoSharp.Test
  
         private string[] InitializeGitmoTest([CallerMemberName]string memberName = "")
         {
+            char otherSep = IO.Path.DirectorySeparatorChar == '/' ? '\\' : '/';
+
             //Monitor.Enter(_object);
-            var pathsToUse = basepaths.Select(p => IO.Path.Combine(testpath, memberName, p)).ToArray();
+            var pathsToUse = basepaths
+                .Select (p => IO.Path.Combine (testpath, memberName, p))
+                .Select (p => p.Replace (otherSep, IO.Path.DirectorySeparatorChar))
+                .ToArray();
 
             try {
                 string testdir = IO.Path.Combine(testpath, memberName, "Test");
@@ -51,7 +56,7 @@ namespace GitmoSharp.Test
                 {
                     throw new ApplicationException($"error creating: {uaex.Message} for {path}", uaex);
                 }
-                if (path.StartsWith(IO.Path.Combine(testpath, memberName, "Test\\Initialized"))) {
+                if (path.StartsWith(IO.Path.Combine(testpath, memberName, "Test\\Initialized".Replace (otherSep, IO.Path.DirectorySeparatorChar)), StringComparison.Ordinal)) {
                     Gitmo.Init(path);
                 }
             }
