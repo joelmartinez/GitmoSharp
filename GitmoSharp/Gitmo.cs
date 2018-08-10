@@ -6,13 +6,14 @@ using System.Threading.Tasks;
 using IO = System.IO;
 
 using LibGit2Sharp;
+using Octokit;
 
 namespace GitmoSharp {
     /// <summary>This library includes methods for an automated process to work with updating a remote repository. This includes making archives of 
     /// certain folders.</summary>
     public class Gitmo : IDisposable {
         private string rootPath;
-        private Repository repository;
+        private LibGit2Sharp.Repository repository;
 
         public string Name { get; set; }
         public string Email { get; set; }
@@ -26,22 +27,30 @@ namespace GitmoSharp {
             }
         }
 
-        public Gitmo(string path, string name, string email) : this(path)
+        public Gitmo(string path, string name, string email)
         {
             this.Name = name;
             this.Email = email;
+
+            CoreInitializeClass (path);
         }
 
         /// <summary>Initializes Gitmo to be able to operate on a git repository. </summary>
         /// <param name="path">The root path to the git repository in question. Must be a valid git repo.</param>
+        [Obsolete("You should really be using the overload to provide the name/email")]
         public Gitmo(string path)
+        {
+            CoreInitializeClass (path);
+        }
+
+        private void CoreInitializeClass (string path)
         {
             rootPath = path;
 
-            ValidatePath();
-            ValidateSignature();
+            ValidatePath ();
+            ValidateSignature ();
 
-            repository = new Repository(path);
+            repository = new LibGit2Sharp.Repository (path);
         }
 
         private void ValidateSignature()
@@ -151,7 +160,7 @@ namespace GitmoSharp {
             Commands.Stage(repository, "*");
 
             this.ValidateSignature();
-            Signature sig = new Signature(this.Name, this.Email, DateTimeOffset.Now);
+            LibGit2Sharp.Signature sig = new LibGit2Sharp.Signature (this.Name, this.Email, DateTimeOffset.Now);
             repository.Commit(message, sig, sig);
         }
 
@@ -163,16 +172,43 @@ namespace GitmoSharp {
             }
         }
 
+        /// <summary>
+        /// Opens the github pull request.
+        /// </summary>
+        /// <returns>The URL to the opened pull request</returns>
+        /// <param name="owner">the org or username</param>
+        /// <param name="reponame">name of the repository</param>
+        /// <param name="branchname">The branch to base the PR on.</param>
+        /// <param name="username">Username</param>
+        /// <param name="password">Password ... this can (should) be a private access token</param>
+        /// <param name="prTitle">The title</param>
+        /// <param name="prBody">Markdown for the body of the PR</param>
+        public async Task<string> OpenGithubPullRequestAsync(string owner, string reponame, string branchname, string username, string password, string prTitle, string prBody)
+        {
+            var github = new GitHubClient (new ProductHeaderValue ("GitmoSharp"));
+            github.Credentials = new Octokit.Credentials (username, password); ;
+            ApiConnection apiConnection = new ApiConnection (github.Connection);
+
+            var repo = await github.Repository.Get (owner, reponame);
+
+            var prDetails = new NewPullRequest (prTitle, branchname, "master");
+            prDetails.Body = prBody;
+
+            PullRequestsClient client = new PullRequestsClient (apiConnection);
+            var pr = await client.Create (repo.Id, prDetails);
+            return pr.Url;
+        }
+
         /// <summary>Checks to see whether the path is a valid git repository.</summary>
         public static bool IsValid(string path)
         {
-            return Repository.IsValid(path);
+            return LibGit2Sharp.Repository.IsValid(path);
         }
 
         /// <summary>Initializes the path into a git repository.</summary>
         public static void Init(string path)
         {
-            Repository.Init(path);
+            LibGit2Sharp.Repository.Init(path);
         }
 
         public static void DeleteRepository(string path)
