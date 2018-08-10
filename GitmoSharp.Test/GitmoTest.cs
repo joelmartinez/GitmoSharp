@@ -234,8 +234,9 @@ namespace GitmoSharp.Test
             didCreateZip = g.Zip(archiveID, relativePathInRepository, outPath);
             Assert.False(didCreateZip, "second zip attempt still made a zip");
 
+            Task.Delay (1500).Wait (); // required delay to make sure the second commit has a different timestamp;
             IO.File.WriteAllText(IO.Path.Combine(repositoryPath, "somedir", "asecondfile.txt"), DateTime.Now.ToString());
-            Task.Delay(1000).Wait(); // required delay to make sure the second commit has a different timestamp;
+
             g.CommitChanges("second commit");
             didCreateZip = g.Zip(archiveID, relativePathInRepository, outPath);
             Assert.True(didCreateZip, "did not create the zip after the second try");
