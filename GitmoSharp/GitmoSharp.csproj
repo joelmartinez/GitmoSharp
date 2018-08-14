@@ -6,7 +6,11 @@
     <PackageId>GitmoSharp</PackageId>
     <PackageVersion>0.8</PackageVersion>
     <Authors>Joel Martinez</Authors>
-    <Description>Git Helper Library</Description>
+    <Title>GitmoSharp - Git CI Helper Library</Title>
+    <Description>Backed by LibGit2Sharp, and Octokit.NET, this library simplifies a few
+    common git-related actions that are commonly used in CI processes such as fetching/cloning 
+    remote repositories, and opening github pull requests (after some local processing).</Description>
+    <RepositoryUrl>https://github.com/joelmartinez/GitmoSharp</RepositoryUrl>
   </PropertyGroup>
 
   <ItemGroup>
