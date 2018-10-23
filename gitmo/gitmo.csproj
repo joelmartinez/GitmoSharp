@@ -26,9 +26,6 @@
     <ProjectReference Include="..\GitmoSharp\GitmoSharp.csproj" />
   </ItemGroup>
 
-  <PropertyGroup>
-    <PackToolsPath></PackToolsPath>
-  </PropertyGroup>
   <ItemGroup>
     <Content Include="..\GitmoSharp\bin\$(Configuration)\netstandard2.0\**\*.*" Link="..\..\..\tools\%(Filename)%(Extension)" />
     
