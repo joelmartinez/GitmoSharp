@@ -23,11 +23,11 @@ namespace gitmo
 
             var gitmo = new Gitmo (values["repopath"], values["name"], values["email"]);
             var prUrl = await gitmo.OpenGithubPullRequestAsync (
-                values["owner"],
+                values["repoowner"],
                 values["reponame"],
                 values["branch"],
                 values["username"],
-                values["password"],
+                values["pass"],
                 values["title"],
                 values["message"]
             );
