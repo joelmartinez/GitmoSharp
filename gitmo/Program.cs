@@ -23,7 +23,7 @@ namespace gitmo
             if (command == "open-pr") 
             {
                 AddOption ("repopath", "Path to the repository");
-                AddOption ("repooowner", "The user or org name of the repo where you're opening the PR");
+                AddOption ("repoowner", "The user or org name of the repo where you're opening the PR");
                 AddOption ("reponame", "Name of the repository (it doesn't necessarily have to match the path/folder)");
                 AddOption ("branch", "The branch that you're merging (in the local repository)");
                 AddOption ("name", "Your full name");
