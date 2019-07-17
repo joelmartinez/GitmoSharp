@@ -11,6 +11,7 @@
     common git-related actions that are commonly used in CI processes such as fetching/cloning 
     remote repositories, and opening github pull requests (after some local processing).</Description>
     <RepositoryUrl>https://github.com/joelmartinez/GitmoSharp</RepositoryUrl>
+    <Version>1.0.1</Version>
   </PropertyGroup>
 
   <ItemGroup>

@@ -16,6 +16,7 @@
     </Description>
     <RepositoryUrl>https://github.com/joelmartinez/GitmoSharp</RepositoryUrl>
     <IsTool>true</IsTool>
+    <Version>1.0.1</Version>
   </PropertyGroup>
 
   <ItemGroup> 
