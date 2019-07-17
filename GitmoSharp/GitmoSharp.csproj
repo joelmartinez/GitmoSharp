@@ -4,7 +4,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <PackOnBuild>true</PackOnBuild>
     <PackageId>GitmoSharp</PackageId>
-    <PackageVersion>0.8</PackageVersion>
+    <PackageVersion>0.8.1</PackageVersion>
     <Authors>Joel Martinez</Authors>
     <Title>GitmoSharp - Git CI Helper Library</Title>
     <Description>Backed by LibGit2Sharp, and Octokit.NET, this library simplifies a few
