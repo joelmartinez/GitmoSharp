@@ -13,7 +13,8 @@ Always reference these instructions first and fallback to search or bash command
   - `dotnet build` -- takes 10 seconds. NEVER CANCEL. Set timeout to 60+ seconds.
   - `dotnet build --configuration Release` -- takes 2-3 seconds for Release builds.
 - Create NuGet packages:
-  - `dotnet pack` -- takes 2 seconds. Creates packages for both GitmoSharp library and gitmo CLI tool.
+  - `dotnet pack --configuration Debug` -- takes 2 seconds. Creates packages for both GitmoSharp library and gitmo CLI tool.
+  - OR `dotnet build --configuration Release && dotnet pack` -- for Release packages.
 - Clean build artifacts:
   - `dotnet clean` -- takes 1 second. Cleans all projects in solution.
 - ALWAYS run restore before build when working with a fresh clone.
@@ -42,7 +43,7 @@ Always reference these instructions first and fallback to search or bash command
 - ALWAYS validate changes by running the full build process:
   - `dotnet restore` (expect 45-60 seconds)
   - `dotnet build` (expect 8-15 seconds)
-  - `dotnet pack` (expect 1-3 seconds, optional but recommended)
+  - `dotnet pack --configuration Debug` (expect 1-3 seconds, optional but recommended)
 - Build should complete with warnings but zero errors.
 - Successful build produces NuGet packages:
   - `GitmoSharp/bin/Debug/GitmoSharp.0.8.1.nupkg` (library package)
