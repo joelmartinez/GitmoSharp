@@ -77,7 +77,7 @@ namespace GitmoSharp {
 
             //Commit latestCommit = repository.Commits.LatestCommitFor(relativePathToZip);
             DateTimeOffset lastUpdated = DateTimeOffset.Now;
-            if (latestFileUpdated != null) {
+            if (latestFileUpdated != default(DateTime)) {
                 lastUpdated = latestFileUpdated;
             }
 
