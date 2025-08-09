@@ -2,7 +2,7 @@
 
 ## About This Repository
 
-GitmoSharp is a .NET Standard 2.0 library that provides helper functions for common git-related operations, particularly useful in CI/CD scenarios. It's backed by LibGit2Sharp and Octokit.NET to simplify git repository management and GitHub operations.
+GitmoSharp is a .NET 8 library that provides helper functions for common git-related operations, particularly useful in CI/CD scenarios. It's backed by LibGit2Sharp and Octokit.NET to simplify git repository management and GitHub operations.
 
 ## Key Components
 
@@ -21,7 +21,7 @@ GitmoSharp is a .NET Standard 2.0 library that provides helper functions for com
 
 ## Technology Stack
 
-- **.NET Standard 2.0**: For cross-platform compatibility
+- **.NET 8**: For modern performance and cross-platform compatibility
 - **LibGit2Sharp**: Native git operations
 - **Octokit.NET**: GitHub API integration
 - **SharpZipLib**: Archive creation
@@ -39,6 +39,12 @@ GitmoSharp is a .NET Standard 2.0 library that provides helper functions for com
 - Keep dependencies minimal and up-to-date
 - Prefer stable, well-maintained packages
 - Document any breaking changes when updating dependencies
+
+### Copilot Instructions Maintenance
+- Always keep these copilot-instructions.md up to date with any changes made to the project
+- Update framework versions, dependencies, and project structure when they change
+- Reflect any architectural or technology stack changes in the documentation
+- Include new development practices or guidelines as they are established
 
 ### Testing
 - Add unit tests for new functionality in `GitmoSharp.Test`
@@ -80,6 +86,15 @@ GitmoSharp is a .NET Standard 2.0 library that provides helper functions for com
 - Build: `dotnet build GitmoSharp.sln`
 - Test: `dotnet test GitmoSharp.Test/`
 - Package: `dotnet pack GitmoSharp/`
+
+## CI/CD
+
+The project includes a GitHub Actions workflow (`.github/workflows/ci.yml`) that:
+- Runs on every push to main branch
+- Runs on every pull request targeting main
+- Sets up .NET 8 environment
+- Restores dependencies, builds the solution, and runs all tests
+- Uses Release configuration for builds and tests
 
 ## Security Considerations
 
