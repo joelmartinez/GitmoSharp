@@ -5,6 +5,7 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   build-and-test:
@@ -26,3 +27,33 @@ jobs:
     
     - name: Test
       run: dotnet test GitmoSharp.Test/ --no-build --verbosity normal --configuration Release
+    
+    - name: Upload NuGet packages
+      if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+      uses: actions/upload-artifact@v4
+      with:
+        name: nuget-packages
+        path: |
+          GitmoSharp/bin/Release/*.nupkg
+          gitmo/bin/Release/*.nupkg
+
+  deploy-nuget:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+    
+    steps:
+    - name: Download NuGet packages
+      uses: actions/download-artifact@v4
+      with:
+        name: nuget-packages
+        path: packages
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+    
+    - name: Deploy to NuGet
+      run: |
+        dotnet nuget push "packages/**/*.nupkg" --api-key ${{ secrets.NUGET_APIKEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
